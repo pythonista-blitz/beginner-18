@@ -1,2 +1,2 @@
-## test
+## About repository
 Signateコンペ用レポジトリです。
