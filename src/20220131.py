@@ -44,6 +44,32 @@ mlflow.log_param(key="random_seed", value=RANDOM_SEED)
 train = pd.read_csv(ROOT_PATH / "dataset" /
                     "train.csv")
 submit = pd.read_csv(ROOT_PATH / "dataset" / "test.csv")
+
+# 初心者コンペのせいか特に汚いデータが見られなかったのでクレンジングは割愛
+
+# EDA
+# first bloodを切る
+train = train.drop(["blueFirstBlood", "blueDragons",
+                   "blueEliteMonsters"], axis=1)
+submit = submit.drop(["blueFirstBlood", "blueDragons",
+                     "blueEliteMonsters"], axis=1)
+
+# ゴールド/経験値をブロックに変換
+exp_edges = [0, 15000, 16500, 17500, 18500, float("inf")]
+train["bin_exp"] = pd.cut(
+    train["blueTotalExperience"], exp_edges, labels=False)
+submit["bin_exp"] = sub_bin_exp = pd.cut(
+    train["blueTotalExperience"], exp_edges, labels=False)
+
+gold_edges = [0, 14500, 15500, 16500, 17500,
+              18500, 19500, 20500, 21500, float("inf")]
+train["bin_gold"] = pd.cut(train["blueTotalGold"], gold_edges, labels=False)
+submit["bin_gold"] = pd.cut(train["blueTotalGold"], gold_edges, labels=False)
+
+train = train.drop(["blueTotalGold", "blueTotalExperience"], axis=1)
+submit = submit.drop(["blueTotalGold", "blueTotalExperience"], axis=1)
+
+# テスト用に分割
 X = train.drop(["blueWins", "gameId"], axis=1)
 y = train["blueWins"]
 
@@ -55,9 +81,6 @@ X_train, X_test, y_train, y_test = train_test_split(
     stratify=y
 )
 
-# 初心者コンペのせいか特に汚いデータが見られなかったのでクレンジングは割愛
-
-# テスト用に分割
 dtrain = xgboost.DMatrix(X_train, label=y_train)
 dtest = xgboost.DMatrix(X_test, label=y_test)
 
@@ -119,7 +142,7 @@ pred_label = np.where(pred_xgb > 0.5, 1, 0)
 submission = pd.DataFrame(
     {"gameId": submit["gameId"], "blueWins": pred_label})
 submission.to_csv(ROOT_PATH / "submit" /
-                  "submission_baseline.csv",
+                  "submission.csv",
                   index=False,
                   header=False
                   )

@@ -1,6 +1,7 @@
 # For data analysis
 *.csv
 dataset/
+submit/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
